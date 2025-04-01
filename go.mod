@@ -1,4 +1,4 @@
-module github.com/lasorda/protobuf-language-server
+module github.com/shizhz/protobuf-language-server
 
 go 1.19
 
