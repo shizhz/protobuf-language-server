@@ -26,7 +26,6 @@ import (
 )
 
 type view struct {
-
 	// keep track of files by document_uri and by basename, a single file may be mapped
 	// to multiple document_uris, and the same basename may map to multiple files
 	filesByURI  map[defines.DocumentUri]ProtoFile
@@ -67,7 +66,6 @@ type Diagnositcs struct {
 
 // setContent sets the file contents for a file.
 func (v *view) setContent(ctx context.Context, document_uri defines.DocumentUri, data []byte) {
-
 	v.fileMu.Lock()
 	defer v.fileMu.Unlock()
 	if data == nil {
@@ -124,6 +122,7 @@ func (v *view) GetPbHeaderLine(document_uri defines.DocumentUri, line int) strin
 
 	return lines[line]
 }
+
 func (v *view) didSave(document_uri defines.DocumentUri) {
 	v.fileMu.Lock()
 	if file, ok := v.filesByURI[document_uri]; ok {
@@ -243,7 +242,6 @@ func (v *view) parseImportProto(document_uri defines.DocumentUri) {
 
 func (v *view) loadProtoFile(document_uri defines.DocumentUri) error {
 	data, err := os.ReadFile(uri.URI(document_uri).Filename())
-
 	if err != nil {
 		return fmt.Errorf("read file err:%v", err)
 	}
@@ -296,7 +294,13 @@ func (v *view) GetDocumentUriFromImportPath(cwd defines.DocumentUri, import_name
 			return defines.DocumentUri(uri.New(path.Clean(abs_name))), nil
 		}
 		for _, additionalProtoDir := range v.settings.AdditionalProtoDirs {
-			abs_name := path.Join(pos, additionalProtoDir, import_name)
+			var abs_name string
+			if strings.HasPrefix(additionalProtoDir, "/") {
+				abs_name = path.Join(additionalProtoDir, import_name)
+			} else {
+				abs_name = path.Join(pos, additionalProtoDir, import_name)
+			}
+
 			if v.fs.FileExists(abs_name) {
 				return defines.DocumentUri(uri.New(path.Clean(abs_name))), nil
 			}
@@ -313,6 +317,7 @@ func toUtf8(iso8859_1_buf []byte) []byte {
 	}
 	return []byte(string(buf))
 }
+
 func hashContent(content []byte) string {
 	return fmt.Sprintf("%x", sha1.Sum(content))
 }
@@ -390,7 +395,6 @@ func onDidChangeConfiguration(ctx context.Context, req *defines.DidChangeConfigu
 }
 
 func Init(server *lsp.Server) {
-
 	ViewManager = newView()
 	ViewManager.Server = server
 
